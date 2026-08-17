@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}IITM Connect – Campus Events{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <!-- Font Awesome for social icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ══ NAVBAR ══ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="{{ url_for('index') }}" class="nav-brand">
+      <img src="{{ url_for('static', filename='images/iitm_logo.png') }}" alt="IITM Logo" class="nav-logo"/>
+      <div class="nav-brand-text">
+        <span class="brand-name">IITM Connect</span>
+        <span class="brand-sub">Campus Events Hub</span>
+      </div>
+    </a>
+
+    <div class="nav-links" id="navLinks">
+      <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+      <a href="{{ url_for('events') }}" class="nav-link">Events</a>
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('my_registrations') }}" class="nav-link nav-my-events">
+          <i class="fa fa-ticket" style="margin-right:4px;font-size:.85rem;"></i>My Events
+        </a>
+      {% endif %}
+      {% if session.get('is_admin') %}
+        <a href="{{ url_for('admin') }}" class="nav-link nav-admin">⚙ Admin</a>
+      {% endif %}
+      {% if session.get('user_id') %}
+        <span class="nav-greeting">Hi, {{ session.get('user_name', 'Student').split()[0] }} 👋</span>
+        <a href="{{ url_for('logout') }}" class="btn-nav btn-outline">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn-nav btn-outline">Login</a>
+        <a href="{{ url_for('signup') }}" class="btn-nav btn-fill">Sign Up</a>
+      {% endif %}
+    </div>
+    <button class="nav-toggle" onclick="toggleNav()" aria-label="Menu">☰</button>
+  </div>
+</nav>
+
+<!-- ══ FLASH MESSAGES ══ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">
+          <span>{{ msg }}</span>
+          <button onclick="this.parentElement.remove()">✕</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ══ PAGE CONTENT ══ -->
+{% block content %}{% endblock %}
+
+<!-- ══ CHATBOT FAB ══ -->
+<div class="chatbot-fab" onclick="toggleChat()" title="Ask IITM Bot">
+  <span class="fab-icon" id="fabIcon">💬</span>
+  <span class="fab-badge" id="fabBadge">1</span>
+</div>
+
+<!-- ══ CHAT WINDOW ══ -->
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar">🤖</div>
+      <div>
+        <div class="chat-title">IITM Bot</div>
+        <div class="chat-status">● Online — Ask me anything!</div>
+      </div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-bubble bot-bubble">
+      Hey! 👋 I'm IITM Bot, your campus event assistant.<br/><br/>
+      Ask me about upcoming events, dates, venues, or how to register!
+    </div>
+  </div>
+  <div class="chat-quick-btns">
+    <button onclick="sendQuick('Show all events')">All Events</button>
+    <button onclick="sendQuick('How to register?')">Register</button>
+    <button onclick="sendQuick('Show technical events')">Technical</button>
+    <button onclick="sendQuick('help')">Help</button>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Ask about IITM events…"
+           onkeydown="if(event.key==='Enter') sendChat()"/>
+    <button onclick="sendChat()" title="Send">➤</button>
+  </div>
+</div>
+
+<!-- ══ FOOTER ══ -->
+<footer class="footer">
+  <div class="footer-inner">
+
+    <!-- Brand block -->
+    <div class="footer-brand-block">
+      <div class="footer-logo-row">
+        <img src="{{ url_for('static', filename='images/iitm_logo.png') }}" alt="IITM Logo" class="footer-logo"/>
+        <div>
+          <div class="footer-brand-name">IITM Connect</div>
+          <div class="footer-brand-full">Institute of Information Technology &amp; Management</div>
+        </div>
+      </div>
+      <p class="footer-tagline">Empowering students to discover, connect, and participate in campus life.</p>
+      <!-- Social Media Icons -->
+      <div class="footer-social-row">
+        <a href="https://www.instagram.com/iitm_janakpuri/" class="social-icon-btn instagram"
+           target="_blank" rel="noopener" title="Instagram">
+          <i class="fab fa-instagram"></i>
+        </a>
+        <a href="https://www.linkedin.com/in/iitm-janakpuri-d29/" class="social-icon-btn linkedin"
+           target="_blank" rel="noopener" title="LinkedIn">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+        <a href="https://www.youtube.com/channel/UCRfsFwiKcTStwUIf2vISxCw" class="social-icon-btn youtube"
+           target="_blank" rel="noopener" title="YouTube">
+          <i class="fab fa-youtube"></i>
+        </a>
+        <a href="mailto:support@iitm.edu" class="social-icon-btn email" title="Email Us">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Quick links -->
+    <div class="footer-col">
+      <div class="footer-col-title">Quick Links</div>
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('events') }}">All Events</a>
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('my_registrations') }}">My Registrations</a>
+      {% endif %}
+      <a href="{{ url_for('login') }}">Login</a>
+      <a href="{{ url_for('signup') }}">Sign Up</a>
+      {% if session.get('is_admin') %}
+        <a href="{{ url_for('admin') }}">Admin Panel</a>
+      {% endif %}
+    </div>
+
+    <!-- Contact -->
+    <div class="footer-col">
+      <div class="footer-col-title">Contact Us</div>
+      <a href="mailto:support@iitm.edu" class="footer-contact">
+        <i class="fas fa-envelope" style="margin-right:6px;color:#60a5fa;"></i>support@iitm.edu
+      </a>
+      <a href="https://www.instagram.com/iitm_janakpuri/" target="_blank" class="footer-contact">
+        <i class="fab fa-instagram" style="margin-right:6px;color:#f472b6;"></i>@iitm_janakpuri
+      </a>
+      <a href="https://www.linkedin.com/in/iitm-janakpuri-d29/" target="_blank" class="footer-contact">
+        <i class="fab fa-linkedin-in" style="margin-right:6px;color:#60a5fa;"></i>iitm-janakpuri
+      </a>
+      <a href="https://www.youtube.com/channel/UCRfsFwiKcTStwUIf2vISxCw" target="_blank" class="footer-contact">
+        <i class="fab fa-youtube" style="margin-right:6px;color:#f87171;"></i>IITM YouTube
+      </a>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2026 IITM – MCA Minor Project &nbsp;|&nbsp; Institute of Information Technology &amp; Management, New Delhi</span>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

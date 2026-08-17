@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Sign Up – IITM Connect{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-container" style="max-width:480px">
+    <div class="auth-header">
+      <div style="font-size:3rem;margin-bottom:0.5rem">🎓</div>
+      <h2>Create Account</h2>
+      <p class="auth-sub">Join IITM Connect and never miss a campus event</p>
+    </div>
+
+    <form method="POST" class="auth-form" id="signupForm" novalidate>
+
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input type="text" name="name" id="nameField"
+               placeholder="Your full name (letters only)"
+               required class="form-input"/>
+        <span class="field-hint">Only letters and spaces (2–50 characters)</span>
+        <span class="field-error" id="err-name"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" name="email" id="emailField"
+               placeholder="student@iitm.edu"
+               required class="form-input"/>
+        <span class="field-error" id="err-email"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Course &amp; Year *</label>
+        <select name="course" id="courseField" required class="form-input">
+          <option value="">Select course</option>
+          {% for c in ['MCA 1st Year','MCA 2nd Year','MCA 3rd Year','BCA 1st Year','BCA 2nd Year','BCA 3rd Year','B.Tech 1st Year','B.Tech 2nd Year','B.Tech 3rd Year','B.Tech 4th Year','MBA 1st Year','MBA 2nd Year'] %}
+          <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+        <span class="field-error" id="err-course"></span>
+      </div>
+
+      <div class="form-group">
+  <label>Enrollment Number *</label>
+  <input type="text" name="enrollment" id="enrollField"
+         placeholder="e.g. 0011223558969"
+         pattern="[0-9]+"
+         title="Only numbers are allowed"
+         required class="form-input"/>
+  <span class="field-hint">Enter numbers only (no letters or symbols)</span>
+  <span class="field-error" id="err-enrollment"></span>
+</div>
+
+      <div class="form-group">
+        <label>Password *</label>
+        <div class="pw-wrap">
+          <input type="password" name="password" id="pwField"
+                 placeholder="Min. 6 characters"
+                 required class="form-input"/>
+          <button type="button" class="pw-toggle" onclick="togglePw()">👁</button>
+        </div>
+        <div class="pw-strength" id="pwStrength"></div>
+        <span class="field-error" id="err-password"></span>
+      </div>
+
+      <button type="submit" class="btn-submit">Create Account →</button>
+    </form>
+
+    <div class="auth-switch">
+      Already have an account? <a href="{{ url_for('login') }}">Sign in →</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePw() {
+  const f = document.getElementById('pwField');
+  f.type = f.type === 'password' ? 'text' : 'password';
+}
+
+// Password strength indicator
+document.getElementById('pwField').addEventListener('input', function() {
+  const v = this.value;
+  const el = document.getElementById('pwStrength');
+  if (!v) { el.textContent = ''; return; }
+  if (v.length < 4)      { el.textContent = '🔴 Too short';  el.style.color = '#ef4444'; }
+  else if (v.length < 6) { el.textContent = '🟡 Almost there'; el.style.color = '#f59e0b'; }
+  else if (v.length < 10){ el.textContent = '🟢 Good';       el.style.color = '#10b981'; }
+  else                   { el.textContent = '🟢 Strong!';    el.style.color = '#10b981'; }
+});
+
+// Frontend validation on submit
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+  let valid = true;
+  const nameVal   = document.getElementById('nameField').value.trim();
+  const emailVal  = document.getElementById('emailField').value.trim();
+  const courseVal = document.getElementById('courseField').value;
+  const enrollVal = document.getElementById('enrollField').value.trim();
+  const pwVal     = document.getElementById('pwField').value;
+
+  const emailRx  = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+  const nameRx   = /^[a-zA-Z ]{2,50}$/;
+  const enrollRx = /^[A-Za-z]{2,5}\d{3,10}$/;
+
+  function setErr(id, msg) {
+    document.getElementById(id).textContent = msg;
+  }
+
+  if (!nameVal || !nameRx.test(nameVal)) {
+    setErr('err-name', nameVal ? 'Only letters and spaces (2–50 chars).' : 'Name is required.');
+    valid = false;
+  } else { setErr('err-name', ''); }
+
+  if (!emailVal || !emailRx.test(emailVal)) {
+    setErr('err-email', emailVal ? 'Enter a valid email address.' : 'Email is required.');
+    valid = false;
+  } else { setErr('err-email', ''); }
+
+  if (!courseVal) {
+    setErr('err-course', 'Please select your course.');
+    valid = false;
+  } else { setErr('err-course', ''); }
+
+  const enrollRx = /^[0-9]+$/;
+
+if (!enrollVal || !enrollRx.test(enrollVal)) {
+  setErr('err-enrollment', enrollVal ? 'Only numbers are allowed.' : 'Enrollment number is required.');
+  valid = false;
+} else {
+  setErr('err-enrollment', '');
+}
+
+  if (!pwVal || pwVal.length < 6) {
+    setErr('err-password', pwVal ? 'Password must be at least 6 characters.' : 'Password is required.');
+    valid = false;
+  } else { setErr('err-password', ''); }
+
+  if (!valid) e.preventDefault();
+});
+
+// Real-time email feedback
+document.getElementById('emailField').addEventListener('input', function() {
+  const rx = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+  document.getElementById('err-email').textContent =
+    (this.value && !rx.test(this.value)) ? 'Enter a valid email address.' : '';
+});
+</script>
+{% endblock %}

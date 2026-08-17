@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel – IITM Connect{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="container">
+    <div class="admin-header">
+      <div>
+        <h1>⚙️ Admin Panel</h1>
+        <p>Manage IITM Connect events, view registrations, and monitor stats</p>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="admin-stats">
+      <div class="admin-stat-card">
+        <div class="asc-icon">🗓</div>
+        <div class="asc-val">{{ total_events }}</div>
+        <div class="asc-label">Total Events</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="asc-icon">📋</div>
+        <div class="asc-val">{{ total_reg }}</div>
+        <div class="asc-label">Registrations</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="asc-icon">👥</div>
+        <div class="asc-val">{{ total_users }}</div>
+        <div class="asc-label">Users</div>
+      </div>
+    </div>
+
+    <div class="admin-layout">
+      <!-- Add Event Form -->
+      <div class="admin-card">
+        <div class="admin-card-title">➕ Add New Event</div>
+        <form method="POST" action="{{ url_for('add_event') }}" class="admin-form" id="addEventForm" novalidate>
+
+          <div class="form-group">
+            <label>Event Name *</label>
+            <input type="text" name="name" placeholder="e.g. AI Summit 2026" required class="form-input"/>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date *</label>
+              <input type="date" name="date" required class="form-input"/>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select name="category" class="form-input">
+                <option value="Technical">⚡ Technical</option>
+                <option value="Cultural">🎭 Cultural</option>
+                <option value="Sports">🏆 Sports</option>
+                <option value="Academic">📚 Academic</option>
+                <option value="Networking">🤝 Networking</option>
+                <option value="General">🎯 General</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Location *</label>
+            <input type="text" name="location" placeholder="e.g. Main Auditorium, IITM" required class="form-input"/>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Max Seats</label>
+              <input type="number" name="max_seats" value="100" min="1" max="2000" class="form-input"/>
+            </div>
+            <div class="form-group">
+              <label>Registration Deadline</label>
+              <input type="date" name="registration_deadline" class="form-input"/>
+            </div>
+          </div>
+
+          <!-- Paid/Free toggle -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Event Type</label>
+              <select name="is_paid" id="isPaidSelect" class="form-input" onchange="togglePriceField(this.value)">
+                <option value="0">✅ Free</option>
+                <option value="1">💳 Paid</option>
+              </select>
+            </div>
+            <div class="form-group" id="priceFieldWrap" style="display:none">
+              <label>Price (₹)</label>
+              <input type="number" name="price" id="priceField" value="0" min="0" class="form-input" placeholder="e.g. 199"/>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Image URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
+            <input type="url" name="image_url" placeholder="https://images.unsplash.com/…" class="form-input"/>
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea name="description" rows="3" placeholder="Describe the event…" class="form-input"></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit" style="width:100%">Add Event →</button>
+        </form>
+      </div>
+
+      <!-- Events List -->
+      <div class="admin-card" style="flex:2">
+        <div class="admin-card-title">📋 Manage Events</div>
+        {% if events %}
+          <div class="admin-events-list">
+            {% for item in events %}
+            {% set ev = item.event %}
+            <div class="admin-event-row">
+              <div class="aer-cat cat-{{ ev.category|lower|replace(' ','') }}">
+                {% if ev.category=='Technical' %}⚡{% elif ev.category=='Cultural' %}🎭
+                {% elif ev.category=='Sports' %}🏆{% elif ev.category=='Academic' %}📚
+                {% elif ev.category=='Networking' %}🤝{% else %}🎯{% endif %}
+              </div>
+              <div class="aer-info">
+                <div class="aer-name">
+                  {{ ev.name }}
+                  {% if ev.is_paid %}<span class="aer-paid-tag">₹{{ ev.price }}</span>
+                  {% else %}<span class="aer-free-tag">FREE</span>{% endif %}
+                </div>
+                <div class="aer-meta">
+                  {{ ev.date }} &nbsp;·&nbsp; {{ ev.location }} &nbsp;·&nbsp;
+                  🪑 {{ item.seats_left }}/{{ ev.max_seats }} seats
+                  {% if ev.registration_deadline %} &nbsp;·&nbsp; Deadline: {{ ev.registration_deadline }}{% endif %}
+                </div>
+              </div>
+              <div class="aer-actions">
+                <a href="{{ url_for('view_registrations', event_id=ev.id) }}" class="btn-sm btn-view">Registrations</a>
+                <form method="POST" action="{{ url_for('delete_event', event_id=ev.id) }}"
+                      onsubmit="return confirm('Delete this event and all registrations?')" style="display:inline">
+                  <button type="submit" class="btn-sm btn-del">Delete</button>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state" style="padding:2rem">
+            <div class="empty-icon">📭</div>
+            <p>No events yet. Add one using the form!</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePriceField(val) {
+  const wrap = document.getElementById('priceFieldWrap');
+  const field = document.getElementById('priceField');
+  if (val === '1') {
+    wrap.style.display = 'block';
+    field.required = true;
+  } else {
+    wrap.style.display = 'none';
+    field.required = false;
+    field.value = '0';
+  }
+}
+// Set min date for both date pickers to today
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type="date"]').forEach(d => { if (!d.min) d.min = today; });
+});
+</script>
+{% endblock %}

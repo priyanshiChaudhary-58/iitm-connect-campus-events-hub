@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block title %}IITM Connect – Discover Campus Events{% endblock %}
+
+{% block content %}
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="hero-bg-shapes">
+    <div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div>
+  </div>
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <img src="{{ url_for('static', filename='images/iitm_logo.png') }}" alt="IITM" height="22" style="border-radius:4px;"/>
+        Events at IITM
+      </div>
+      <h1 class="hero-title">Discover<br/><span class="gradient-text">IITM Campus Life</span></h1>
+      <p class="hero-tagline">Your one-stop hub for all events at the Institute of Information Technology &amp; Management — find, explore, and register in seconds.</p>
+      <div class="hero-actions">
+        <a href="{{ url_for('events') }}" class="btn-primary">Explore Events →</a>
+        {% if not session.get('user_id') %}
+          <a href="{{ url_for('signup') }}" class="btn-ghost">Create Account</a>
+        {% endif %}
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span>{{ events|length }}+</span><label>Upcoming Events</label></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span>6</span><label>Categories</label></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span>100%</span><label>Free to Join</label></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card-float">
+        <div class="float-card fc1"><div class="fc-icon">⚡</div><div><div class="fc-label">Tech Fest 2026</div><div class="fc-sub">Aug 15 · Auditorium</div></div></div>
+        <div class="float-card fc2"><div class="fc-icon">🤖</div><div><div class="fc-label">AI & ML Workshop</div><div class="fc-sub">May 12 · CS Dept.</div></div></div>
+        <div class="float-card fc3"><div class="fc-icon">💻</div><div><div class="fc-label">Hackathon 24H</div><div class="fc-sub">Jul 20 · Lab Block</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ EVENT CAROUSEL ══ -->
+{% if events %}
+<section class="carousel-section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">Featured</div>
+        <h2 class="section-title">Spotlight Events</h2>
+      </div>
+      <div class="carousel-controls">
+        <button class="carousel-btn" id="prevBtn" onclick="carouselPrev()" aria-label="Previous">‹</button>
+        <button class="carousel-btn" id="nextBtn" onclick="carouselNext()" aria-label="Next">›</button>
+      </div>
+    </div>
+    <div class="carousel-wrapper">
+      <div class="carousel-track" id="carouselTrack">
+        {% for item in events %}
+        {% set ev = item.event %}
+        <div class="carousel-slide">
+          <div class="carousel-img-wrap">
+            {% if ev.image_url %}
+              <img src="{{ ev.image_url }}" alt="{{ ev.name }}" onerror="this.src='https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=900&q=80'"/>
+            {% else %}
+              <div class="carousel-img-fallback cat-{{ ev.category|lower|replace(' ','') }}">🎯</div>
+            {% endif %}
+            <div class="carousel-overlay">
+              <div class="carousel-meta">
+                <span class="carousel-cat">{{ ev.category }}</span>
+                {% if ev.is_paid %}<span class="carousel-paid">₹{{ ev.price }}</span>
+                {% else %}<span class="carousel-free">FREE</span>{% endif %}
+              </div>
+              <div class="carousel-info">
+                <h3>{{ ev.name }}</h3>
+                <p>📅 {{ ev.date }} &nbsp;·&nbsp; 📍 {{ ev.location }}</p>
+                {% if item.is_full %}
+                  <span class="carousel-full-badge">Event Full</span>
+                {% elif item.deadline_passed %}
+                  <span class="carousel-deadline-badge">Registration Closed</span>
+                {% else %}
+                  <a href="{{ url_for('register', event_id=ev.id) }}" class="carousel-reg-btn">Register Now</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Dots -->
+    <div class="carousel-dots" id="carouselDots">
+      {% for item in events %}
+      <button class="carousel-dot {% if loop.first %}active{% endif %}"
+              onclick="carouselGoTo({{ loop.index0 }})"></button>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ══ CATEGORY PILLS ══ -->
+<section class="categories-section">
+  <div class="container">
+    <div class="category-pills">
+      <a href="{{ url_for('events') }}" class="pill active">All</a>
+      <a href="{{ url_for('events', category='Technical') }}" class="pill">⚡ Technical</a>
+      <a href="{{ url_for('events', category='Cultural') }}" class="pill">🎭 Cultural</a>
+      <a href="{{ url_for('events', category='Sports') }}" class="pill">🏆 Sports</a>
+      <a href="{{ url_for('events', category='Academic') }}" class="pill">📚 Academic</a>
+      <a href="{{ url_for('events', category='Networking') }}" class="pill">🤝 Networking</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ UPCOMING EVENTS ══ -->
+<section class="events-section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">Happening Soon</div>
+        <h2 class="section-title">Upcoming Events</h2>
+      </div>
+      <a href="{{ url_for('events') }}" class="see-all">View All →</a>
+    </div>
+
+    {% if events %}
+      <div class="events-grid">
+        {% for item in events[:6] %}
+        {% set ev = item.event %}
+        <div class="event-card" style="--delay:{{ loop.index0 * 0.08 }}s">
+
+          <!-- Image -->
+          <div class="card-img-wrap">
+            {% if ev.image_url %}
+              <img src="{{ ev.image_url }}" alt="{{ ev.name }}" class="card-img"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+              <div class="card-img-fallback cat-{{ ev.category|lower|replace(' ','') }}" style="display:none">
+                {% if ev.category=='Technical' %}⚡{% elif ev.category=='Cultural' %}🎭
+                {% elif ev.category=='Sports' %}🏆{% elif ev.category=='Academic' %}📚
+                {% elif ev.category=='Networking' %}🤝{% else %}🎯{% endif %}
+              </div>
+            {% else %}
+              <div class="card-img-fallback cat-{{ ev.category|lower|replace(' ','') }}">
+                {% if ev.category=='Technical' %}⚡{% elif ev.category=='Cultural' %}🎭
+                {% elif ev.category=='Sports' %}🏆{% elif ev.category=='Academic' %}📚
+                {% elif ev.category=='Networking' %}🤝{% else %}🎯{% endif %}
+              </div>
+            {% endif %}
+            <div class="card-category-badge cat-badge-{{ ev.category|lower|replace(' ','') }}">{{ ev.category }}</div>
+            <!-- Paid / Free badge -->
+            {% if ev.is_paid %}
+              <div class="card-paid-badge">₹{{ ev.price }}</div>
+            {% else %}
+              <div class="card-free-badge">FREE</div>
+            {% endif %}
+          </div>
+
+          <div class="card-body">
+            <h3 class="card-title">{{ ev.name }}</h3>
+            <p class="card-desc">{{ ev.description[:100] }}{% if ev.description|length > 100 %}…{% endif %}</p>
+
+            <!-- Countdown -->
+            <div class="card-countdown" data-date="{{ ev.date }}">
+              <span class="countdown-label">⏱</span>
+              <span class="countdown-value" id="cd-{{ ev.id }}">Loading…</span>
+            </div>
+
+            <div class="card-meta">
+              <span class="meta-item">📅 {{ ev.date }}</span>
+              <span class="meta-item">📍 {{ ev.location }}</span>
+              {% if ev.registration_deadline %}
+                <span class="meta-item">🗓 Deadline: {{ ev.registration_deadline }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Seats bar -->
+            <div class="seats-bar-wrap">
+              {% if item.is_full %}
+                <div class="seats-full-label">🔴 Event Full (0 seats left)</div>
+              {% else %}
+                {% set pct = ((ev.max_seats - item.seats_left) / ev.max_seats * 100)|int %}
+                <div class="seats-info">
+                  <span>🪑 {{ item.seats_left }} / {{ ev.max_seats }} seats left</span>
+                  {% if item.seats_left <= 10 %}<span class="seats-warning">Almost Full!</span>{% endif %}
+                </div>
+                <div class="seats-bar">
+                  <div class="seats-bar-fill {% if pct >= 80 %}seats-red{% elif pct >= 50 %}seats-orange{% else %}seats-green{% endif %}"
+                       style="width:{{ pct }}%"></div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="card-footer">
+            {% if item.is_full %}
+              <button class="btn-register btn-disabled" disabled>Event Full</button>
+            {% elif item.deadline_passed %}
+              <button class="btn-register btn-disabled" disabled>Registration Closed</button>
+            {% elif ev.is_paid %}
+              <a href="{{ url_for('register', event_id=ev.id) }}" class="btn-register btn-paid"
+                 onclick="return confirmPaid('{{ ev.name }}', {{ ev.price }})">
+                Register — ₹{{ ev.price }}
+              </a>
+            {% else %}
+              <a href="{{ url_for('register', event_id=ev.id) }}" class="btn-register">Register Now</a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No Upcoming Events</h3>
+        <p>New events are being added. Check back soon!</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ══ PAID EVENT CONFIRMATION MODAL ══ -->
+<div id="paidModal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-icon">💳</div>
+    <h3 id="modalTitle">Paid Event</h3>
+    <p id="modalMsg">This event requires a registration fee.</p>
+    <div class="modal-note">
+      Please pay at the <strong>college counter</strong> or contact the event coordinator after registering online.
+    </div>
+    <div class="modal-actions">
+      <button onclick="closePaidModal()" class="modal-cancel">Cancel</button>
+      <a id="modalProceedBtn" href="#" class="modal-proceed">Proceed to Register</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAST EVENTS ══ -->
+{% if past_events %}
+<section class="past-section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">In The Books</div>
+        <h2 class="section-title">Past Events</h2>
+      </div>
+    </div>
+  </div>
+  <div class="past-scroll-wrapper">
+    <div class="past-scroll">
+      {% for event in past_events %}
+      <div class="past-card">
+        <div class="past-card-img">
+          {% if event.image_url %}
+            <img src="{{ event.image_url }}" alt="{{ event.name }}"
+                 onerror="this.style.display='none'"/>
+          {% endif %}
+          <div class="past-img-overlay cat-{{ event.category|lower|replace(' ','') }}"></div>
+          <div class="past-badge-wrap"><span class="past-done-badge">Completed ✓</span></div>
+          <div class="past-icon-big">
+            {% if event.category=='Technical' %}⚡{% elif event.category=='Cultural' %}🎭
+            {% elif event.category=='Sports' %}🏆{% elif event.category=='Academic' %}📚
+            {% elif event.category=='Networking' %}🤝{% else %}🎯{% endif %}
+          </div>
+        </div>
+        <div class="past-info">
+          <div class="past-name">{{ event.name }}</div>
+          <div class="past-date">{{ event.date }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ══ LINKEDIN POSTS ══ -->
+<section class="social-section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-label">From Our Community</div>
+        <h2 class="section-title">IITM on LinkedIn</h2>
+      </div>
+      <a href="https://www.linkedin.com/in/iitm-janakpuri-d29/" target="_blank" class="see-all">View Profile →</a>
+    </div>
+    <div class="linkedin-posts-grid">
+      <div class="li-card">
+        <div class="li-header">
+          <img src="{{ url_for('static', filename='images/iitm_logo.png') }}" alt="IITM" class="li-avatar"/>
+          <div class="li-meta">
+            <div class="li-name">Institute of Information Technology &amp; Management</div>
+            <div class="li-sub">5,675 followers &nbsp;·&nbsp; 6h &nbsp;·&nbsp; 🌐</div>
+          </div>
+          <div class="li-badge">in</div>
+        </div>
+        <div class="li-body">
+          <p>🤖 <strong>Exploring the Power of AI &amp; ML!</strong></p>
+          <p>The Department of Computer Science at IITM successfully conducted an engaging seminar on Artificial Intelligence &amp; Machine Learning 🎓✨</p>
+          <p>A special thanks to our expert speaker <strong>Mr. Aman</strong> for delivering an informative and inspiring session! 👏</p>
+          <div class="li-tags">#AI #MachineLearning #IITM #TechSeminar #FutureReady #Innovation</div>
+        </div>
+        <div class="li-footer">
+          <div class="li-reactions"><span class="li-react-icons">👍❤️💡</span><span class="li-react-count">120</span></div>
+          <div class="li-actions">
+            <button class="li-action-btn">👍 Like</button>
+            <button class="li-action-btn">💬 Comment (25)</button>
+            <button class="li-action-btn">↗ Share</button>
+          </div>
+        </div>
+      </div>
+      <div class="li-card">
+        <div class="li-header">
+          <img src="{{ url_for('static', filename='images/iitm_logo.png') }}" alt="IITM" class="li-avatar"/>
+          <div class="li-meta">
+            <div class="li-name">Institute of Information Technology &amp; Management</div>
+            <div class="li-sub">5,675 followers &nbsp;·&nbsp; 2d &nbsp;·&nbsp; 🌐</div>
+          </div>
+          <div class="li-badge">in</div>
+        </div>
+        <div class="li-body">
+          <p>💻✨ <strong>Building smarter students with smarter tools!</strong></p>
+          <p>A hands-on workshop on <strong>Basic Excel and MS Word</strong> led by <strong>CA Rohit Kumar</strong>, focused on practical learning and real-world applications.</p>
+          <p>Equipping our students — one skill at a time! 🚀</p>
+          <div class="li-tags">#IITM #Excel #MSWord #SkillDevelopment #PracticalLearning</div>
+        </div>
+        <div class="li-footer">
+          <div class="li-reactions"><span class="li-react-icons">👍❤️🙌</span><span class="li-react-count">98</span></div>
+          <div class="li-actions">
+            <button class="li-action-btn">👍 Like</button>
+            <button class="li-action-btn">💬 Comment (18)</button>
+            <button class="li-action-btn">↗ Share</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CTA ══ -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box">
+      <div class="cta-shapes"><div class="cta-s1"></div><div class="cta-s2"></div></div>
+      <div class="cta-logo"><img src="{{ url_for('static', filename='images/iitm_logo.png') }}" alt="IITM" height="52"/></div>
+      <h2>Ready to Get Involved?</h2>
+      <p>Join hundreds of IITM students discovering campus events every week.</p>
+      <div class="cta-actions">
+        <a href="{{ url_for('events') }}" class="btn-primary">Browse Events</a>
+        {% if not session.get('user_id') %}
+          <a href="{{ url_for('signup') }}" class="btn-ghost-white">Create Free Account</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/countdown.js') }}"></script>
+<script src="{{ url_for('static', filename='js/carousel.js') }}"></script>
+<script>
+// Paid event confirmation
+let _paidHref = '';
+function confirmPaid(name, price) {
+  document.getElementById('modalTitle').textContent = name;
+  document.getElementById('modalMsg').textContent =
+    'This event requires a registration fee of ₹' + price + '.';
+  // get the href from the clicked link
+  _paidHref = event.currentTarget.href;
+  document.getElementById('modalProceedBtn').href = _paidHref;
+  document.getElementById('paidModal').style.display = 'flex';
+  return false;
+}
+function closePaidModal() {
+  document.getElementById('paidModal').style.display = 'none';
+}
+// Close on overlay click
+document.getElementById('paidModal').addEventListener('click', function(e) {
+  if (e.target === this) closePaidModal();
+});
+</script>
+{% endblock %}

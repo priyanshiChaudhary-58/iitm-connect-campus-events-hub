@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Register – {{ event.name }}{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-container" style="max-width:540px">
+    <div class="auth-header">
+      <div class="auth-icon cat-{{ event.category|lower|replace(' ','') }}"
+           style="font-size:2.5rem;padding:1rem;border-radius:16px;display:inline-block;margin-bottom:1rem">
+        {% if event.category=='Technical' %}⚡{% elif event.category=='Cultural' %}🎭
+        {% elif event.category=='Sports' %}🏆{% elif event.category=='Academic' %}📚
+        {% elif event.category=='Networking' %}🤝{% else %}🎯{% endif %}
+      </div>
+      <h2>Register for Event</h2>
+      <p class="auth-sub">{{ event.name }}</p>
+    </div>
+
+    <!-- Event Info Banner -->
+    <div class="event-info-banner">
+      <div class="eib-item"><span>📅</span> {{ event.date }}</div>
+      <div class="eib-item"><span>📍</span> {{ event.location }}</div>
+      <div class="eib-item"><span>🗂</span> {{ event.category }}</div>
+      {% if event.is_paid %}
+        <div class="eib-item eib-paid"><span>💳</span> Fee: ₹{{ event.price }}</div>
+      {% else %}
+        <div class="eib-item eib-free"><span>✅</span> Free Event</div>
+      {% endif %}
+      {% if event.registration_deadline %}
+        <div class="eib-item"><span>🗓</span> Deadline: {{ event.registration_deadline }}</div>
+      {% endif %}
+      <div class="eib-item"><span>🪑</span> {{ seats_left }} seats left</div>
+    </div>
+
+    <!-- Paid Event Notice -->
+    {% if event.is_paid %}
+    <div class="paid-notice">
+      <div class="paid-notice-icon">💳</div>
+      <div>
+        <strong>Paid Event — ₹{{ event.price }}</strong>
+        <p>Please pay the registration fee at the <strong>college counter</strong> or contact the event coordinator. Your online registration confirms your slot.</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('register', event_id=event.id) }}"
+          class="auth-form" id="regForm" novalidate>
+
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input type="text" name="name" id="nameField"
+               placeholder="e.g. Priyanshi Kumari"
+               value="{{ user.name if user else '' }}"
+               required class="form-input"
+               pattern="[a-zA-Z ]{2,50}"
+               title="Only letters and spaces (2–50 characters)"/>
+        <span class="field-error" id="err-name"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" name="email" id="emailField"
+               placeholder="student@college.edu"
+               value="{{ user.email if user else '' }}"
+               required class="form-input"/>
+        <span class="field-error" id="err-email"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Course &amp; Year *</label>
+        <select name="course" id="courseField" required class="form-input">
+          <option value="">Select your course</option>
+          {% set courses = ['MCA 1st Year','MCA 2nd Year','MCA 3rd Year','BCA 1st Year','BCA 2nd Year','BCA 3rd Year','B.Tech 1st Year','B.Tech 2nd Year','B.Tech 3rd Year','B.Tech 4th Year','MBA 1st Year','MBA 2nd Year','B.Sc IT 1st Year','B.Sc IT 2nd Year','B.Sc IT 3rd Year'] %}
+          {% for c in courses %}
+            <option value="{{ c }}" {% if user and user.course == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+        <span class="field-error" id="err-course"></span>
+      </div>
+
+      <div class="form-group">
+  <label>Enrollment Number *</label>
+  <input type="number" name="enrollment" id="enrollField"
+         placeholder="e.g. 17407563782902"
+         value="{{ user.enrollment if user else '' }}"
+         required class="form-input"
+         title="Only numbers allowed"/>
+  
+  <span class="field-hint">Enter numbers only (no letters or symbols)</span>
+  <span class="field-error" id="err-enrollment"></span>
+</div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">
+        {% if event.is_paid %}
+          <span>Register &amp; Pay Later — ₹{{ event.price }}</span>
+        {% else %}
+          <span>Confirm Registration</span>
+        {% endif %}
+        <span class="btn-arrow">→</span>
+      </button>
+    </form>
+
+    <div style="text-align:center;margin-top:1.5rem">
+      <a href="{{ url_for('index') }}" class="back-link">← Back to Events</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Frontend validation
+document.getElementById('regForm').addEventListener('submit', function(e) {
+  let valid = true;
+  const nameVal   = document.getElementById('nameField').value.trim();
+  const emailVal  = document.getElementById('emailField').value.trim();
+  const courseVal = document.getElementById('courseField').value;
+  const enrollVal = document.getElementById('enrollField').value.trim();
+
+  const emailRx  = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+  const nameRx   = /^[a-zA-Z ]{2,50}$/;
+  const enrollRx = /^[A-Za-z]{2,5}\d{3,10}$/;
+
+  function setErr(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.previousElementSibling.classList.toggle('input-error', !!msg);
+  }
+
+  if (!nameVal)              { setErr('err-name', 'Name is required.'); valid = false; }
+  else if (!nameRx.test(nameVal)) { setErr('err-name', 'Only letters and spaces (2–50 chars).'); valid = false; }
+  else                       { setErr('err-name', ''); }
+
+  if (!emailVal)             { setErr('err-email', 'Email is required.'); valid = false; }
+  else if (!emailRx.test(emailVal)) { setErr('err-email', 'Enter a valid email address.'); valid = false; }
+  else                       { setErr('err-email', ''); }
+
+  if (!courseVal)            { setErr('err-course', 'Please select your course.'); valid = false; }
+  else                       { setErr('err-course', ''); }
+
+  const enrollRx = /^[0-9]+$/;
+
+if (!enrollVal) {
+  setErr('err-enrollment', 'Enrollment number is required.');
+  valid = false;
+}
+else if (!enrollRx.test(enrollVal)) {
+  setErr('err-enrollment', 'Only numbers are allowed.');
+  valid = false;
+}
+else {
+  setErr('err-enrollment', '');
+}
+
+  if (!valid) e.preventDefault();
+});
+
+// Real-time email validation feedback
+document.getElementById('emailField').addEventListener('input', function() {
+  const rx = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+  const err = document.getElementById('err-email');
+  if (this.value && !rx.test(this.value)) {
+    err.textContent = 'Enter a valid email.';
+    this.classList.add('input-error');
+  } else {
+    err.textContent = '';
+    this.classList.remove('input-error');
+  }
+});
+</script>
+{% endblock %}

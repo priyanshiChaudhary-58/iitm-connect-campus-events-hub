@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Registrations – {{ event.name }}{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="container">
+    <div class="admin-header">
+      <div>
+        <a href="{{ url_for('admin') }}" class="back-link">← Back to Admin</a>
+        <h1>📋 Registrations</h1>
+        <p>{{ event.name }} &nbsp;·&nbsp; {{ event.date }} &nbsp;·&nbsp; {{ event.location }}</p>
+      </div>
+      <div class="reg-count-badge">{{ registrations|length }} Registered</div>
+    </div>
+
+    {% if registrations %}
+    <div class="admin-card">
+      <div class="reg-table-wrap">
+        <table class="reg-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Course</th>
+              <th>Enrollment</th>
+              <th>Registered At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in registrations %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ r.student_name }}</strong></td>
+              <td>{{ r.email }}</td>
+              <td>{{ r.course }}</td>
+              <td><code>{{ r.enrollment }}</code></td>
+              <td>{{ r.registered_at }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state admin-card" style="padding:3rem">
+      <div class="empty-icon">📭</div>
+      <h3>No Registrations Yet</h3>
+      <p>No students have registered for this event.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

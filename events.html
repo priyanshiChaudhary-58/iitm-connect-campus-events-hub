@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Events – IITM Connect{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <div class="page-hero-content">
+      <h1>All Events</h1>
+      <p>Discover and register for events happening at IITM</p>
+    </div>
+  </div>
+</section>
+
+<section class="events-list-section">
+  <div class="container">
+    <form class="search-bar" action="{{ url_for('events') }}" method="GET">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="q" placeholder="Search events by name, location…"
+               value="{{ query }}" class="search-input"/>
+      </div>
+      <select name="category" class="filter-select">
+        <option value="">All Categories</option>
+        <option value="Technical"   {% if category=='Technical'   %}selected{% endif %}>⚡ Technical</option>
+        <option value="Cultural"    {% if category=='Cultural'    %}selected{% endif %}>🎭 Cultural</option>
+        <option value="Sports"      {% if category=='Sports'      %}selected{% endif %}>🏆 Sports</option>
+        <option value="Academic"    {% if category=='Academic'    %}selected{% endif %}>📚 Academic</option>
+        <option value="Networking"  {% if category=='Networking'  %}selected{% endif %}>🤝 Networking</option>
+        <option value="General"     {% if category=='General'     %}selected{% endif %}>🎯 General</option>
+      </select>
+      <button type="submit" class="btn-primary">Search</button>
+      {% if query or category %}
+        <a href="{{ url_for('events') }}" class="btn-clear">Clear ✕</a>
+      {% endif %}
+    </form>
+
+    {% if query or category %}
+      <div class="result-info">
+        {% if events %}
+          Found <strong>{{ events|length }}</strong> result(s)
+          {% if query %} for "<strong>{{ query }}</strong>"{% endif %}
+          {% if category %} in <strong>{{ category }}</strong>{% endif %}
+        {% else %}
+          No results found. <a href="{{ url_for('events') }}">Clear filters</a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if events %}
+      <div class="events-grid">
+        {% for item in events %}
+        {% set ev = item.event %}
+        <div class="event-card" style="--delay:{{ loop.index0 * 0.06 }}s">
+
+          <div class="card-img-wrap">
+            {% if ev.image_url %}
+              <img src="{{ ev.image_url }}" alt="{{ ev.name }}" class="card-img"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+              <div class="card-img-fallback cat-{{ ev.category|lower|replace(' ','') }}" style="display:none">
+                {% if ev.category=='Technical' %}⚡{% elif ev.category=='Cultural' %}🎭
+                {% elif ev.category=='Sports' %}🏆{% elif ev.category=='Academic' %}📚
+                {% elif ev.category=='Networking' %}🤝{% else %}🎯{% endif %}
+              </div>
+            {% else %}
+              <div class="card-img-fallback cat-{{ ev.category|lower|replace(' ','') }}">
+                {% if ev.category=='Technical' %}⚡{% elif ev.category=='Cultural' %}🎭
+                {% elif ev.category=='Sports' %}🏆{% elif ev.category=='Academic' %}📚
+                {% elif ev.category=='Networking' %}🤝{% else %}🎯{% endif %}
+              </div>
+            {% endif %}
+            <div class="card-category-badge cat-badge-{{ ev.category|lower|replace(' ','') }}">{{ ev.category }}</div>
+            {% if ev.is_paid %}
+              <div class="card-paid-badge">₹{{ ev.price }}</div>
+            {% else %}
+              <div class="card-free-badge">FREE</div>
+            {% endif %}
+          </div>
+
+          <div class="card-body">
+            <h3 class="card-title">{{ ev.name }}</h3>
+            <p class="card-desc">{{ ev.description[:110] }}{% if ev.description|length > 110 %}…{% endif %}</p>
+
+            <div class="card-countdown" data-date="{{ ev.date }}">
+              <span class="countdown-label">⏱</span>
+              <span class="countdown-value" id="cd-{{ ev.id }}">Loading…</span>
+            </div>
+
+            <div class="card-meta">
+              <span class="meta-item">📅 {{ ev.date }}</span>
+              <span class="meta-item">📍 {{ ev.location }}</span>
+              {% if ev.registration_deadline %}
+                <span class="meta-item">🗓 Deadline: {{ ev.registration_deadline }}</span>
+              {% endif %}
+            </div>
+
+            <div class="seats-bar-wrap">
+              {% if item.is_full %}
+                <div class="seats-full-label">🔴 Event Full (0 seats left)</div>
+              {% else %}
+                {% set pct = ((ev.max_seats - item.seats_left) / ev.max_seats * 100)|int %}
+                <div class="seats-info">
+                  <span>🪑 {{ item.seats_left }} / {{ ev.max_seats }} seats left</span>
+                  {% if item.seats_left <= 10 %}<span class="seats-warning">Almost Full!</span>{% endif %}
+                </div>
+                <div class="seats-bar">
+                  <div class="seats-bar-fill {% if pct >= 80 %}seats-red{% elif pct >= 50 %}seats-orange{% else %}seats-green{% endif %}"
+                       style="width:{{ pct }}%"></div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="card-footer">
+            {% if item.is_full %}
+              <button class="btn-register btn-disabled" disabled>Event Full</button>
+            {% elif item.deadline_passed %}
+              <button class="btn-register btn-disabled" disabled>Registration Closed</button>
+            {% elif ev.is_paid %}
+              <a href="{{ url_for('register', event_id=ev.id) }}" class="btn-register btn-paid"
+                 onclick="return confirmPaid('{{ ev.name }}', {{ ev.price }})">
+                Register — ₹{{ ev.price }}
+              </a>
+            {% else %}
+              <a href="{{ url_for('register', event_id=ev.id) }}" class="btn-register">Register Now</a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No Events Found</h3>
+        <p>Try a different search term or category.</p>
+        <a href="{{ url_for('events') }}" class="btn-primary" style="margin-top:1rem;display:inline-block">View All Events</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Paid Modal (same as index.html) -->
+<div id="paidModal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-icon">💳</div>
+    <h3 id="modalTitle">Paid Event</h3>
+    <p id="modalMsg">This event requires a registration fee.</p>
+    <div class="modal-note">
+      Please pay at the <strong>college counter</strong> or contact the event coordinator after registering online.
+    </div>
+    <div class="modal-actions">
+      <button onclick="closePaidModal()" class="modal-cancel">Cancel</button>
+      <a id="modalProceedBtn" href="#" class="modal-proceed">Proceed to Register</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/countdown.js') }}"></script>
+<script>
+let _paidHref = '';
+function confirmPaid(name, price) {
+  document.getElementById('modalTitle').textContent = name;
+  document.getElementById('modalMsg').textContent = 'This event requires a registration fee of ₹' + price + '.';
+  _paidHref = event.currentTarget.href;
+  document.getElementById('modalProceedBtn').href = _paidHref;
+  document.getElementById('paidModal').style.display = 'flex';
+  return false;
+}
+function closePaidModal() { document.getElementById('paidModal').style.display = 'none'; }
+document.getElementById('paidModal').addEventListener('click', function(e) { if (e.target === this) closePaidModal(); });
+</script>
+{% endblock %}

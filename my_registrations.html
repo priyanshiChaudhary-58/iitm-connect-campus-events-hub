@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}My Registrations – IITM Connect{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <div class="page-hero-content">
+      <h1>🎟 My Registrations</h1>
+      <p>All events you've registered for, in one place.</p>
+    </div>
+  </div>
+</section>
+
+<section class="my-reg-section">
+  <div class="container">
+    {% if registrations %}
+      <div class="my-reg-grid">
+        {% for reg in registrations %}
+        <div class="my-reg-card">
+
+          <!-- Image strip -->
+          <div class="my-reg-img">
+            {% if reg.image_url %}
+              <img src="{{ reg.image_url }}" alt="{{ reg.event_name }}"
+                   onerror="this.style.display='none'"/>
+            {% endif %}
+            <div class="my-reg-img-overlay cat-{{ reg.category|lower|replace(' ','') }}"></div>
+            <div class="my-reg-cat-badge">{{ reg.category }}</div>
+          </div>
+
+          <div class="my-reg-body">
+            <h3 class="my-reg-title">{{ reg.event_name }}</h3>
+
+            <div class="my-reg-meta">
+              <span>📅 {{ reg.date }}</span>
+              <span>📍 {{ reg.location }}</span>
+              <span>🎓 {{ reg.course }}</span>
+              <span>🆔 {{ reg.enrollment }}</span>
+            </div>
+
+            <div class="my-reg-footer">
+              {% if reg.is_paid %}
+                <span class="my-reg-paid">💳 ₹{{ reg.price }} — Pay at college counter</span>
+              {% else %}
+                <span class="my-reg-free">✅ Free Event</span>
+              {% endif %}
+              <span class="my-reg-date">Registered on {{ reg.registered_at[:10] }}</span>
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="empty-state" style="padding:5rem 2rem">
+        <div class="empty-icon">🎟</div>
+        <h3>No Registrations Yet</h3>
+        <p>You haven't registered for any events. Explore what's coming up!</p>
+        <a href="{{ url_for('events') }}" class="btn-primary" style="margin-top:1.5rem;display:inline-block">
+          Browse Events →
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

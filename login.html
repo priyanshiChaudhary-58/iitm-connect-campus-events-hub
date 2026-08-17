@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Login – IITM Connect{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-container">
+    <div class="auth-header">
+      <img src="{{ url_for('static', filename='images/iitm_logo.png') }}" alt="IITM"
+           style="height:56px;margin:0 auto .75rem;border-radius:10px;"/>
+      <h2>Welcome Back</h2>
+      <p class="auth-sub">Sign in to your IITM Connect account</p>
+    </div>
+
+    <form method="POST" class="auth-form">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="you@iitm.edu" required class="form-input"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" name="password" id="pwField" placeholder="••••••••" required class="form-input"/>
+          <button type="button" class="pw-toggle" onclick="togglePw()">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit">Sign In →</button>
+    </form>
+
+    <div class="auth-demo">
+      <div class="demo-label">Demo Admin Credentials</div>
+      <div class="demo-creds">admin@iitm.edu &nbsp;/&nbsp; admin123</div>
+    </div>
+
+    <div class="auth-switch">
+      Don't have an account? <a href="{{ url_for('signup') }}">Create one →</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>function togglePw(){const f=document.getElementById('pwField');f.type=f.type==='password'?'text':'password';}</script>
+{% endblock %}
